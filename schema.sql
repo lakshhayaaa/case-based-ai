@@ -23,7 +23,7 @@ CREATE TABLE case_chunks (
     case_id BIGINT REFERENCES entrepreneurial_cases(case_id),
     chunk_text TEXT,
     chunk_order INT,
-    embedding_vector VARCHAR(100),
+    embedding_vector TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -32,7 +32,7 @@ CREATE TABLE user_queries (
     query_id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users(user_id),
     query_text TEXT,
-    query_embedding VARCHAR(100),
+    query_embedding TEXT,
     asked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

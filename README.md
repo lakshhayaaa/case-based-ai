@@ -48,11 +48,14 @@ python -m utils.chunking
 * Number of chunks > number of cases
 
 ---
+## Step 4: Embeddings
 
-## 🏁 Status
+* pip/pip3 install sentence-transformers
+* python3 -m rag_project.embedding_model
 
-✔ Database created
-✔ Dataset loaded
-✔ Chunking completed
+---
 
-Ready for **Step 4: Embeddings**
+## Step 4: Embeddings
+
+* pip3 install chromadb
+* python3 -m rag_project.vector_store
