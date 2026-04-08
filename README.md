@@ -49,13 +49,22 @@ python -m utils.chunking
 
 ---
 ## Step 4: Embeddings
-
-* pip/pip3 install sentence-transformers
-* python3 -m rag_project.embedding_model
+```bash
+pip3 install sentence-transformers
+```
+```bash
+python3 -m rag_project.embedding_model
+```
 
 ---
 
-## Step 4: Embeddings
+## Step 5: Store in VectorDB
 
-* pip3 install chromadb
-* python3 -m rag_project.vector_store
+```bash
+pip3 install chromadb
+```
+```bash
+python3 -m rag_project.vector_store
+```
+
+
