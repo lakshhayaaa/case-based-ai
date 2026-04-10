@@ -2,3 +2,7 @@ psycopg2-binary
 python-dotenv
 sentence-transformers
 chromadb
+fastapi
+uvicorn
+"pydantic[email]"
+bcrypt

@@ -1,8 +1,13 @@
 import chromadb
+import dotenv
 from database.db_connection import get_connection
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 client=chromadb.PersistentClient(
-    settings=chromadb.Settings(persist_directory="/Users/lakshayaa/Desktop/case-based-ai/chroma_db")
+    settings=chromadb.Settings(persist_directory=os.getenv("chroma_dir"))
 )
 client.create_collection(name="case_chunks")
 

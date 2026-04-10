@@ -1,10 +1,13 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 client = chromadb.PersistentClient(
-    settings=chromadb.Settings(persist_directory="/Users/lakshayaa/Desktop/case-based-ai/chroma_db")
+    settings=chromadb.Settings(persist_directory=os.getenv("chroma_dir"))
 )
 print("Collections in test:", client.list_collections())
 collection = client.get_collection(name="case_chunks")

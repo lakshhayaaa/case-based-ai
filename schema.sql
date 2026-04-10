@@ -1,5 +1,5 @@
 -- USERS
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100),
     email VARCHAR(150) UNIQUE,
@@ -7,7 +7,7 @@ CREATE TABLE users (
 );
 
 -- ENTREPRENEURIAL CASES
-CREATE TABLE entrepreneurial_cases (
+CREATE TABLE IF NOT EXISTS entrepreneurial_cases (
     case_id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255),
     source VARCHAR(255),
@@ -18,7 +18,7 @@ CREATE TABLE entrepreneurial_cases (
 );
 
 -- CASE CHUNKS
-CREATE TABLE case_chunks (
+CREATE TABLE IF NOT EXISTS case_chunks (
     chunk_id BIGSERIAL PRIMARY KEY,
     case_id BIGINT REFERENCES entrepreneurial_cases(case_id),
     chunk_text TEXT,
@@ -28,7 +28,7 @@ CREATE TABLE case_chunks (
 );
 
 -- USER QUERIES
-CREATE TABLE user_queries (
+CREATE TABLE IF NOT EXISTS user_queries (
     query_id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users(user_id),
     query_text TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE user_queries (
 );
 
 -- AI RESPONSES
-CREATE TABLE ai_responses (
+CREATE TABLE IF NOT EXISTS ai_responses (
     response_id BIGSERIAL PRIMARY KEY,
     query_id BIGINT REFERENCES user_queries(query_id),
     final_response_text TEXT,
@@ -45,14 +45,14 @@ CREATE TABLE ai_responses (
 );
 
 -- RESPONSE CASE MAPPING
-CREATE TABLE response_case_mapping (
+CREATE TABLE IF NOT EXISTS response_case_mapping (
     response_id BIGINT REFERENCES ai_responses(response_id),
     case_id BIGINT REFERENCES entrepreneurial_cases(case_id),
     PRIMARY KEY (response_id, case_id)
 );
 
 -- RESPONSE CHUNK MAPPING
-CREATE TABLE response_chunk_mapping (
+CREATE TABLE IF NOT EXISTS response_chunk_mapping (
     response_id BIGINT REFERENCES ai_responses(response_id),
     chunk_id BIGINT REFERENCES case_chunks(chunk_id),
     used_for VARCHAR(100),
@@ -60,7 +60,7 @@ CREATE TABLE response_chunk_mapping (
 );
 
 -- VERIFICATION LOG
-CREATE TABLE verification_log (
+CREATE TABLE IF NOT EXISTS verification_log (
     verification_id BIGSERIAL PRIMARY KEY,
     response_id BIGINT REFERENCES ai_responses(response_id),
     claim_text TEXT,
@@ -71,10 +71,27 @@ CREATE TABLE verification_log (
 );
 
 -- TRUST SCORE
-CREATE TABLE trust_score (
+CREATE TABLE IF NOT EXISTS trust_score (
     response_id BIGINT PRIMARY KEY REFERENCES ai_responses(response_id),
     trust_score DECIMAL(5,2),
     supported_claim INT,
     total_claims INT,
     calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- USER AUTH
+CREATE TABLE IF NOT EXISTS user_auth (
+    auth_id       BIGSERIAL PRIMARY KEY,
+    user_id       BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    password_hash VARCHAR(255),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+);
+
+-- USER SESSIONS
+CREATE TABLE IF NOT EXISTS user_sessions (
+    session_id   BIGSERIAL PRIMARY KEY,
+    user_id      BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token_hash   VARCHAR(255) UNIQUE NOT NULL,
+    expires_at   TIMESTAMP NOT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
