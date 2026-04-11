@@ -3,6 +3,7 @@ from database.db_connection import get_connection
 from models.query_models import QueryRequest, QueryResponse
 from rag_project.retrieval import retrieve
 from rag_project.llm_generator import generate_answer
+from rag_project.verification import verify_response, calculate_trust_score, save_verification
 
 router = APIRouter()
 
@@ -72,8 +73,19 @@ def ask_query(query_data: QueryRequest):
     curr.close()
     conn.close()
 
+    # 🔎 Verify response
+    verification_results = verify_response(answer, chunk_texts, chunk_ids)
+
+    #Calculate trust score
+    trust_score_data = calculate_trust_score(verification_results)
+
+    # Save verification + trust score
+    save_verification(response_id, verification_results, trust_score_data)
+
+    trust_score, supported, total = trust_score_data
+
     return QueryResponse(
         query_id=query_id,
         query_text=query_data.query_text,
-        response_text=answer
-    )
+        response_text=f"{answer}\n\nTrust Score: {trust_score:.2f}% ({supported}/{total} claims supported)"
+        )
