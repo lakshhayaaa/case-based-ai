@@ -1,3 +1,4 @@
+
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from database.db_connection import get_connection
