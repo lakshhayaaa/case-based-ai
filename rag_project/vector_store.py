@@ -9,7 +9,7 @@ load_dotenv()
 client=chromadb.PersistentClient(
     settings=chromadb.Settings(persist_directory=os.getenv("chroma_dir"))
 )
-client.create_collection(name="case_chunks")
+collection = client.get_or_create_collection(name="case_chunks")
 
 #connect to the database and fetch all the case chunks
 conn=get_connection()

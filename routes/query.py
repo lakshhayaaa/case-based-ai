@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from database.db_connection import get_connection
 from models.query_models import QueryRequest, QueryResponse
 from rag_project.retrieval import retrieve
+from rag_project.llm_generator import generate_answer
 
 router = APIRouter()
 
@@ -26,14 +27,53 @@ def ask_query(query_data: QueryRequest):
     conn.close()
 
     result = retrieve(query_id=query_id, query=query_data.query_text)
-    #for now we will just return the retrieved chunk texts as the response, but in a real implementation we would pass these to an LLM to generate a more natural response
+
     chunk_ids = result["chunk_ids"]
     chunk_texts = result["chunk_texts"]
     case_ids = list(set(result["case_ids"]))
-    response_text = f"Retrieved {len(chunk_ids)} chunks from {len(case_ids)} cases."
+
+    answer = generate_answer(query_data.query_text, chunk_texts)
+    conn = get_connection()
+    curr = conn.cursor()
+
+    # 5️⃣ Store AI response
+    curr.execute(
+        """
+        INSERT INTO ai_responses (query_id, final_response_text)
+        VALUES (%s, %s)
+        RETURNING response_id
+        """,
+        (query_id, answer)
+    )
+
+    response_id = curr.fetchone()[0]
+
+    # 6️⃣ Store chunk mappings
+    for chunk_id in chunk_ids:
+        curr.execute(
+            """
+            INSERT INTO response_chunk_mapping (response_id, chunk_id, used_for)
+            VALUES (%s, %s, %s)
+            """,
+            (response_id, chunk_id, "retrieval")
+        )
+
+    # 7️⃣ Store case mappings
+    for case_id in case_ids:
+        curr.execute(
+            """
+            INSERT INTO response_case_mapping (response_id, case_id)
+            VALUES (%s, %s)
+            """,
+            (response_id, case_id)
+        )
+
+    conn.commit()
+    curr.close()
+    conn.close()
 
     return QueryResponse(
         query_id=query_id,
         query_text=query_data.query_text,
-        response_text=response_text
+        response_text=answer
     )
