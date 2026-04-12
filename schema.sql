@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS user_auth (
     auth_id       BIGSERIAL PRIMARY KEY,
     user_id       BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     password_hash VARCHAR(255),
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- USER SESSIONS
