@@ -2,6 +2,7 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 from database.db_connection import get_connection
+import re
 # Load environment variables from .env file
 load_dotenv()
 
@@ -12,17 +13,43 @@ DB_CONFIG = {
     "password": os.getenv("DB_PASSWORD")
 }
 
-def chunk_text(text, chunk_size=200, overlap=50):
-    words = text.split()
+import re
+
+def chunk_text(text, chunk_size=100, overlap=20):
+    # Split into sentences
+    sentences = re.split(r'(?<=[.!?]) +', text)
+
     chunks = []
-    start=0
-    chunk_id=0
-    while start<len(words):
-        end=start+chunk_size
-        chunk=words[start:end]
-        chunks.append(( " ".join(chunk), chunk_id ))
-        start+=chunk_size-overlap
-        chunk_id+=1
+    current_chunk = []
+    current_length = 0
+    chunk_id = 0
+
+    for sentence in sentences:
+        words = sentence.split()
+        sentence_length = len(words)
+
+        # If adding this sentence stays within limit
+        if current_length + sentence_length <= chunk_size:
+            current_chunk.append(sentence)
+            current_length += sentence_length
+        else:
+            # Save current chunk
+            chunks.append((" ".join(current_chunk), chunk_id))
+            chunk_id += 1
+
+            # Keep overlap (last 2 sentences)
+            overlap_sentences = current_chunk[-2:] if len(current_chunk) >= 2 else current_chunk
+            current_chunk = overlap_sentences.copy()
+            current_length = sum(len(s.split()) for s in current_chunk)
+
+            # Add new sentence
+            current_chunk.append(sentence)
+            current_length += sentence_length
+
+    # Add last chunk
+    if current_chunk:
+        chunks.append((" ".join(current_chunk), chunk_id))
+
     return chunks
 
 conn=get_connection()

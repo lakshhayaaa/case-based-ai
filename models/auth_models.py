@@ -13,3 +13,4 @@ class UserResponse(BaseModel):
     user_id: int
     name: str
     email: EmailStr
+    token: str = None  # Optional token field for sign-in response

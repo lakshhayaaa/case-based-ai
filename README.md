@@ -67,4 +67,18 @@ pip3 install chromadb
 python3 -m rag_project.vector_store
 ```
 
+## Step 6: Install Ollama in your machine
 
+## Step 7: Install the model(run this only once)
+```bash
+ollama pull llama3:8b
+```
+
+## Step 8: Start ollama (command is for Mac)
+```bash
+brew services start ollama
+```
+## Step 9: Start application
+```bash
+uvicorn app:app --reload
+```

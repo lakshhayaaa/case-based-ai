@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException
 from database.db_connection import get_connection
 from models.auth_models import SignUpRequest, SignInRequest, UserResponse
 import bcrypt
+import secrets
+import hashlib
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
@@ -50,8 +53,6 @@ def signin(data: SignInRequest):
     """, (data.email,))
     
     user = cur.fetchone()
-    cur.close()
-    conn.close()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -65,5 +66,18 @@ def signin(data: SignInRequest):
     # Verify password
     if not bcrypt.checkpw(data.password.encode(), stored_hash.encode()):
         raise HTTPException(status_code=401, detail="Incorrect password")
+    
+    token=secrets.token_hex(32) # Generate a random token (for demonstration)
+    print("Generated token:", token)  # Debugging line to check the generated token
+    token_hash = hashlib.sha256(token.encode()).hexdigest()  # Hash the token before storing
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)  # Token valid for 7 days
+    #store the token hash in the database
+    cur.execute("""
+                INSERT INTO user_sessions (user_id, token_hash, expires_at)
+                VALUES (%s, %s, %s)
+                """, (user[0], token_hash, expires_at))
+    conn.commit()
+    cur.close()
+    conn.close()
 
-    return {"user_id": user[0], "name": user[1], "email": user[2]}
+    return {"user_id": user[0], "name": user[1], "email": user[2],"token": token}

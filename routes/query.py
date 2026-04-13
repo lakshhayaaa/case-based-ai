@@ -1,26 +1,28 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from database.db_connection import get_connection
 from models.query_models import QueryRequest, QueryResponse
 from rag_project.retrieval import retrieve
 from rag_project.llm_generator import generate_answer
 from rag_project.verification import verify_response, calculate_trust_score, save_verification
+from routes.auth_middleware import get_current_user
+
 
 router = APIRouter()
 
 @router.post("/ask", response_model=QueryResponse)
-def ask_query(query_data: QueryRequest):
+def ask_query(query_data: QueryRequest, user_id: int = Depends(get_current_user)):
     conn = get_connection()
     curr = conn.cursor()
 
     # verify user exists
-    curr.execute("SELECT user_id FROM users WHERE user_id=%s", (query_data.user_id,))
+    curr.execute("SELECT user_id FROM users WHERE user_id=%s", (user_id,))
     if not curr.fetchone():
         raise HTTPException(status_code=404, detail="User not found")
 
     # store the user query in the database
     curr.execute(
         "INSERT INTO user_queries (user_id, query_text) VALUES (%s, %s) RETURNING query_id",
-        (query_data.user_id, query_data.query_text)
+        (user_id, query_data.query_text)
     )
     query_id = curr.fetchone()[0]
     conn.commit()
@@ -87,5 +89,8 @@ def ask_query(query_data: QueryRequest):
     return QueryResponse(
         query_id=query_id,
         query_text=query_data.query_text,
-        response_text=f"{answer}\n\nTrust Score: {trust_score:.2f}% ({supported}/{total} claims supported)"
-        )
+        response_text=answer,
+        trust_score=trust_score,
+        supported_claims=supported,
+        total_claims=total
+    )
